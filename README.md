@@ -2,7 +2,8 @@
 
 An interactive Power BI dashboard and SQL verification project analyzing **~150K Uber ride bookings** to uncover trends in ride demand, booking value, vehicle performance, cancellations, and payment behavior.
 
-![Dash1-Home](images/01_home.png)
+<img width="1535" height="862" alt="Dash1-Home" src="https://github.com/user-attachments/assets/90c2397c-78f1-4f7f-85b1-5b2c53f9d9f2" />
+
 
 ## 📌 Overview
 The report has three pages:
@@ -14,8 +15,10 @@ The report has three pages:
 | **Booking & Operational Analysis** | Customer metrics, success and cancellation rates, booking status breakdown, and payment methods |
 
 ## 📸 Screenshots
-![Dash2-Overview](images/02_overview.png)
-![Dash3-Booking and Operations](images/03_booking_operations.png)
+
+<img width="1535" height="862" alt="Dash2-Overview" src="https://github.com/user-attachments/assets/114f0d9f-486a-4d2a-850a-64ccfd6a58b6" />
+
+<img width="1535" height="862" alt="Dash3-booing and operations" src="https://github.com/user-attachments/assets/f4ae980a-db54-4414-a492-8c3f2ed17955" />
 
 ## ✨ Features
 - **KPI Cards:** Total distance, booking count, average distance, completed bookings, lost bookings, total customers, successful booking rate, cancellation rate, and average booking value
