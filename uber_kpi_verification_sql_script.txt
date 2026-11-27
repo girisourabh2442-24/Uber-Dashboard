@@ -1,0 +1,102 @@
+-- ============================================================================
+-- Project: Uber Ride Bookings Power BI & SQL Analysis
+-- Author:  Sourabh Giri (https://github.com/girisourabh2442-24)
+-- File:    sql/kpi_verification.txt
+-- Purpose: Cross-verify Power BI KPI cards, status rates, vehicle performance,
+--          payment distribution, and monthly trends against the raw dataset.
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. Core KPI Summary (Matches Overview & Operations KPI Cards)
+-- ----------------------------------------------------------------------------
+SELECT
+    COUNT(*) AS total_rows,
+    COUNT(DISTINCT booking_id) AS unique_bookings,
+    COUNT(DISTINCT customer_id) AS unique_customers,
+    COUNT(DISTINCT CASE WHEN booking_status = 'Completed' THEN booking_id END) AS completed_bookings,
+    COUNT(DISTINCT CASE WHEN booking_status <> 'Completed' THEN booking_id END) AS lost_bookings,
+    ROUND(
+        100.0 * SUM(CASE WHEN booking_status = 'Completed' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0),
+        2
+    ) AS successful_booking_rate_pct,
+    ROUND(
+        100.0 * SUM(CASE WHEN booking_status IN ('Cancelled by Driver', 'Cancelled by Customer') THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0),
+        2
+    ) AS cancellation_rate_pct,
+    ROUND(SUM(COALESCE(booking_value, 0)), 2) AS total_booking_value,
+    ROUND(AVG(booking_value), 2) AS avg_booking_value,
+    ROUND(SUM(COALESCE(ride_distance, 0)), 2) AS total_ride_distance,
+    ROUND(AVG(ride_distance), 2) AS avg_ride_distance,
+    ROUND(AVG(customer_rating), 2) AS avg_customer_rating
+FROM uber_bookings;
+
+
+-- ----------------------------------------------------------------------------
+-- 2. Booking Status & Cancellation Split Check
+-- ----------------------------------------------------------------------------
+SELECT
+    booking_status,
+    COUNT(*) AS booking_rows,
+    COUNT(DISTINCT booking_id) AS unique_bookings,
+    ROUND(100.0 * COUNT(*) / NULLIF(SUM(COUNT(*)) OVER (), 0), 2) AS pct_share,
+    ROUND(SUM(COALESCE(booking_value, 0)), 2) AS booking_value_sum
+FROM uber_bookings
+GROUP BY booking_status
+ORDER BY booking_rows DESC;
+
+
+-- ----------------------------------------------------------------------------
+-- 3. Vehicle Type Performance Breakdown
+-- ----------------------------------------------------------------------------
+SELECT
+    vehicle_type,
+    COUNT(*) AS total_bookings,
+    SUM(CASE WHEN booking_status = 'Completed' THEN 1 ELSE 0 END) AS completed_rides,
+    ROUND(SUM(COALESCE(booking_value, 0)), 2) AS total_booking_value,
+    ROUND(AVG(booking_value), 2) AS avg_booking_value,
+    ROUND(AVG(ride_distance), 2) AS avg_distance
+FROM uber_bookings
+GROUP BY vehicle_type
+ORDER BY total_booking_value DESC;
+
+
+-- ----------------------------------------------------------------------------
+-- 4. Payment Method Distribution
+-- ----------------------------------------------------------------------------
+SELECT
+    payment_method,
+    COUNT(*) AS booking_count,
+    ROUND(100.0 * COUNT(*) / NULLIF(SUM(COUNT(*)) OVER (), 0), 2) AS share_pct,
+    ROUND(SUM(COALESCE(booking_value, 0)), 2) AS total_value
+FROM uber_bookings
+GROUP BY payment_method
+ORDER BY booking_count DESC;
+
+
+-- ----------------------------------------------------------------------------
+-- 5. Monthly Booking & Revenue Trend
+-- Note: Replace DATE_TRUNC('month', booking_date) with:
+--       - DATE_FORMAT(booking_date, '%Y-%m-01') in MySQL
+--       - DATETRUNC(month, booking_date) in SQL Server
+-- ----------------------------------------------------------------------------
+SELECT
+    DATE_TRUNC('month', booking_date) AS booking_month,
+    COUNT(*) AS total_bookings,
+    SUM(CASE WHEN booking_status = 'Completed' THEN 1 ELSE 0 END) AS completed_bookings,
+    ROUND(SUM(COALESCE(booking_value, 0)), 2) AS monthly_booking_value
+FROM uber_bookings
+GROUP BY DATE_TRUNC('month', booking_date)
+ORDER BY booking_month;
+
+
+-- ----------------------------------------------------------------------------
+-- 6. Data Hygiene & Null Check
+-- ----------------------------------------------------------------------------
+SELECT
+    COUNT(*) AS total_records,
+    SUM(CASE WHEN booking_id IS NULL THEN 1 ELSE 0 END) AS null_booking_ids,
+    SUM(CASE WHEN customer_id IS NULL THEN 1 ELSE 0 END) AS null_customer_ids,
+    SUM(CASE WHEN booking_value IS NULL THEN 1 ELSE 0 END) AS null_booking_values,
+    SUM(CASE WHEN ride_distance IS NULL THEN 1 ELSE 0 END) AS null_ride_distances,
+    SUM(CASE WHEN customer_rating IS NULL THEN 1 ELSE 0 END) AS null_customer_ratings
+FROM uber_bookings;
